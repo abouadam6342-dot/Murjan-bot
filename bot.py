@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-"""
 مرجان - Marjan Telegram Bot
 A Shami Syrian soul-powered Telegram bot using Gemini API
 الدستور الأعظم يحكم كل حركة وكل رد
@@ -11,6 +9,20 @@ from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 import google.generativeai as genai
+def run_dummy_server():
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b"Bot is running")
+
+        def log_message(self, format, *args):
+            return
+
+    server = HTTPServer(("0.0.0.0", 10000), Handler)
+    server.serve_forever()
+
+threading.Thread(target=run_dummy_server, daemon=True).start()
 from constitution import SYSTEM_PROMPT
 
 # Load environment variables

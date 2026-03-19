@@ -2,7 +2,8 @@
 A Shami Syrian soul-powered Telegram bot using Gemini API
 الدستور الأعظم يحكم كل حركة وكل رد
 """
-
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
 import os
 import logging
 from dotenv import load_dotenv
@@ -56,7 +57,7 @@ generation_config = genai.types.GenerationConfig(
 )
 
 model = genai.GenerativeModel(
-   model_name = "gemini-2.0-flash"
+    model_name="gemini-2.0-flash",
     generation_config=generation_config
 )
 

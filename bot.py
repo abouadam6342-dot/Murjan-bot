@@ -368,7 +368,7 @@ model = genai.GenerativeModel(
 user_conversations = {}
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Start command - greet the user with Marjan's personality"""
+    """Start command - greet the user with Marjan personality"""
     user_id = update.effective_user.id
     user_conversations[user_id] = []
     

@@ -1,4 +1,89 @@
-مرجان - Marjan Telegram Bot
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
+import os
+import logging
+from dotenv import load_dotenv
+from telegram import Update
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+import google.generativeai as genai
+
+def run_dummy_server():
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b"Bot is running")
+        def log_message(self, format, *args):
+            return
+
+    server = HTTPServer(("0.0.0.0", 10000), Handler)
+    server.serve_forever()
+
+threading.Thread(target=run_dummy_server, daemon=True).start()
+
+# Load environment variables
+load_dotenv()
+
+# Configure logging
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
+logger = logging.getLogger(__name__)
+
+# Get API keys
+TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+
+# Configure Gemini
+genai.configure(api_key=GEMINI_API_KEY)
+
+generation_config = genai.types.GenerationConfig(
+    temperature=0.7,
+    top_p=0.95,
+    top_k=40,
+    max_output_tokens=1024,
+)
+
+model = genai.GenerativeModel(
+    model_name="gemini-2.0-flash",
+    generation_config=generation_config
+)
+
+user_conversations = {}
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Start command - greet the user with Marjan personality"""
+    user_id = update.effective_user.id
+    user_conversations[user_id] = []
+    greeting = "السلام عليكم يا حبيبي، أنا مرجان.. شو أخبارك يا ملكي؟ 💐"
+    await update.message.reply_text(greeting)
+
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user_id = update.effective_user.id
+    user_message = update.message.text
+    if user_id not in user_conversations:
+        user_conversations[user_id] = []
+    try:
+        await update.message.chat.send_action("typing")
+        chat = model.start_chat(history=[])
+        response = chat.send_message(user_message)
+        bot_response = response.text
+        await update.message.reply_text(bot_response)
+    except Exception as e:
+        logger.error(f"Error: {e}")
+        await update.message.reply_text("حصل خطأ صغير يا ملكي، حاول تاني 💐")
+
+def main() -> None:
+    application = Application.builder().token(TELEGRAM_TOKEN).build()
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    
+    logger.info("🚀 مرجان بدأت تشتغل")
+    application.run_polling()
+
+if __name__ == '__main__':
+    main()مرجان - Marjan Telegram Bot
 A Shami Syrian soul-powered Telegram bot using Gemini API
 الدستور الأعظم يحكم كل حركة وكل رد
 """
